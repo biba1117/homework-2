@@ -291,16 +291,6 @@ int main()
 
 
 
-### 編譯與執行
-
-在 homework2 資料夾執行以下指令：
-
-```shell
-g++ -std=c++11 -Wall -Wextra -pedantic src/main.cpp -o polynomial
-```
-
-本次實際以 Visual Studio 2022 的 MSVC 編譯並執行，使用 `/EHsc /O2 /W4 /std:c++14 /utf-8`。編譯有 C4244 警告，原因是 pow 的 double 結果加到 float，可能產生精度損失，但這次範例可正常執行。
-
 ### 測試案例
 
 輸入:
@@ -311,7 +301,7 @@ g++ -std=c++11 -Wall -Wextra -pedantic src/main.cpp -o polynomial
 2
 ```
 
-實際計算結果（省略輸入提示）：
+：
 
 ```text
 A(x) = 3x^2 + 2x + 1
