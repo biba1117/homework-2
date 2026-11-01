@@ -289,19 +289,11 @@ int main()
 
 ## 測試與驗證
 
-### 編譯方式
 
-在 homework2 資料夾執行：
-
-```shell
-g++ -std=c++11 -Wall -Wextra -pedantic src/main.cpp -o polynomial
-```
-
-本次實際使用 MSVC，編譯參數為 `/EHsc /O2 /W4 /std:c++14 /utf-8`。pow 的結果轉成 float 時出現 C4244 警告，仍可完成編譯。
 
 ### 測試案例
 
-輸入 A = 3x^2 + 2x + 1，B = x - 1，最後輸入 x = 2：
+輸入:
 
 ```text
 3 3 2 2 1 1 0
@@ -311,16 +303,12 @@ g++ -std=c++11 -Wall -Wextra -pedantic src/main.cpp -o polynomial
 
 實際輸出：
 
-```text
-A(x) = 3x^2 + 2x + 1
-B(x) = 1x - 1
-A + B = 3x^2 + 3x + 0
-A * B = 3x^3 - 1x^2 - 1x - 1
+
 A(2) = 17
 B(2) = 1
 ```
 
-此版本不會刪除抵銷後的零係數項，所以加法結果會保留最後的 + 0。輸出也會保留係數 1。
+。
 
 ## 心得討論
 
