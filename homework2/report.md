@@ -95,13 +95,13 @@ public:
         capacity = p.capacity;
         terms = p.terms;
         termArray = new Term[capacity];
-        for (int i = 0; i < terms; i++)
+        for (int i = 0; i < terms && i < capacity; i++)
             termArray[i] = p.termArray[i];
     }
     Polynomial& operator=(const Polynomial& p) {
         if (this == &p) return *this;
         Term* temp = new Term[p.capacity];
-        for (int i = 0; i < p.terms; i++)
+        for (int i = 0; i < p.terms && i < p.capacity; i++)
             temp[i] = p.termArray[i];
         delete[] termArray;
         termArray = temp;
@@ -171,6 +171,7 @@ public:
     }
 };
 #endif
+
 
 ```
 
@@ -287,3 +288,4 @@ B(2) = 1
 另外，動態陣列不能只複製指標，所以補上複製建構子和指定運算子，讓每個物件有自己的陣列，避免重複釋放。
 
 目前用迴圈搜尋同類項比較容易理解，不過項數多時會比較慢，之後可以用教材的雙指標方法改進加法。
+

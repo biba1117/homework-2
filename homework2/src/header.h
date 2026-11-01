@@ -70,13 +70,13 @@ public:
         capacity = p.capacity;
         terms = p.terms;
         termArray = new Term[capacity];
-        for (int i = 0; i < terms; i++)
+        for (int i = 0; i < terms && i < capacity; i++)
             termArray[i] = p.termArray[i];
     }
     Polynomial& operator=(const Polynomial& p) {
         if (this == &p) return *this;
         Term* temp = new Term[p.capacity];
-        for (int i = 0; i < p.terms; i++)
+        for (int i = 0; i < p.terms && i < p.capacity; i++)
             temp[i] = p.termArray[i];
         delete[] termArray;
         termArray = temp;
@@ -146,3 +146,4 @@ public:
     }
 };
 #endif
+
