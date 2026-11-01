@@ -1,5 +1,3 @@
-#ifndef HEADER_H
-#define HEADER_H
 #include <iostream>
 #include <cmath>
 using namespace std;
@@ -163,4 +161,3 @@ float Polynomial::Eval(float x)
     }
     return sum;
 }
-#endif
