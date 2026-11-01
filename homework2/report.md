@@ -4,174 +4,188 @@
 
 ## 解題說明
 
-實作 Polynomial 類別，完成多項式的加法、乘法、代入 x 和輸入輸出。
+使用 Polynomial 類別完成多項式的加法、乘法、代入 x，以及輸入輸出。
 
 ### 解題策略
 
-1. Term 儲存每一項的係數 coef 和指數 exp。
-2. Polynomial 用動態陣列儲存各項，capacity 是容量，terms 是項數。
-3. newTerm 新增一項，容量不夠就加倍，再複製原本的資料。
-4. addTerm 搜尋相同指數，有找到就加上係數，沒有就新增，並依指數由大到小排列。係數變成 0 就移除。
-5. Add 先複製第一個多項式，再把第二個多項式的項逐一加入。
-6. Mult 用兩層迴圈把各項配對，係數相乘、指數相加，再合併同類項。
-7. Eval 使用 pow 計算各項並累加。
-8. >> 讀入項數和每項的係數、指數，<< 負責輸出。
-
-例如 A = 3x^2 + 2x + 1，B = x - 1，相加為 3x^2 + 3x，相乘為 3x^3 - x^2 - x - 1。
+1. Term 儲存係數 coef 和指數 exp。
+2. Polynomial 使用動態陣列，初始容量為 10，容量不夠就加倍。
+3. newTerm 把新的一項放到陣列最後。
+4. Add 先放入第一個多項式，再逐項搜尋第二個多項式的指數，指數相同就把係數相加。
+5. Mult 把兩個多項式的各項配對，係數相乘、指數相加，再合併相同指數。
+6. Eval 使用 pow 計算每項的值，再加總。
+7. >> 讀入項數、係數和指數；<< 輸出各項。
 
 ## 程式實作
 
 ### src/header.h
 ```cpp
-#ifndef POLYNOMIAL_H
-#define POLYNOMIAL_H
+#ifndef HEADER_H
+#define HEADER_H
 #include <iostream>
 #include <cmath>
 using namespace std;
 
-class Polynomial;
-class Term {
-    friend class Polynomial;
-private:
+class Term
+{
+public:
     float coef;
     int exp;
 };
 
-class Polynomial {
+class Polynomial
+{
 private:
     Term* termArray;
     int capacity;
     int terms;
 
-    void newTerm(float coef, int exp) {
-        if (coef == 0) return;
-        if (terms == capacity) {
-            Term* temp = new Term[capacity * 2];
+    void newTerm(float coef, int exp)
+    {
+        if (terms >= capacity)
+        {
+            capacity *= 2;
+            Term* temp = new Term[capacity];
             for (int i = 0; i < terms; i++)
+            {
                 temp[i] = termArray[i];
+            }
             delete[] termArray;
             termArray = temp;
-            capacity *= 2;
         }
         termArray[terms].coef = coef;
         termArray[terms].exp = exp;
         terms++;
     }
 
-    // 找相同指數，沒有就新增，最後依指數排列。
-    void addTerm(float coef, int exp) {
-        if (coef == 0) return;
-        for (int i = 0; i < terms; i++) {
-            if (termArray[i].exp == exp) {
-                termArray[i].coef += coef;
-                if (termArray[i].coef == 0) {
-                    for (int j = i; j < terms - 1; j++)
-                        termArray[j] = termArray[j + 1];
-                    terms--;
-                }
-                return;
-            }
-        }
-        newTerm(coef, exp);
-        for (int i = terms - 1; i > 0; i--) {
-            if (termArray[i].exp > termArray[i - 1].exp) {
-                Term temp = termArray[i];
-                termArray[i] = termArray[i - 1];
-                termArray[i - 1] = temp;
-            } else break;
-        }
-    }
-
 public:
-    Polynomial() {
-        capacity = 2;
+    Polynomial(int cap = 10)
+    {
+        capacity = cap;
         terms = 0;
         termArray = new Term[capacity];
     }
-    ~Polynomial() { delete[] termArray; }
-
-    // 複製資料，讓每個物件使用自己的陣列。
-    Polynomial(const Polynomial& p) {
-        capacity = p.capacity;
-        terms = p.terms;
-        termArray = new Term[capacity];
-        for (int i = 0; i < terms && i < capacity; i++)
-            termArray[i] = p.termArray[i];
-    }
-    Polynomial& operator=(const Polynomial& p) {
-        if (this == &p) return *this;
-        Term* temp = new Term[p.capacity];
-        for (int i = 0; i < p.terms && i < p.capacity; i++)
-            temp[i] = p.termArray[i];
+    ~Polynomial()
+    {
         delete[] termArray;
-        termArray = temp;
-        capacity = p.capacity;
-        terms = p.terms;
-        return *this;
     }
+    friend istream& operator>>(istream& in, Polynomial& p);
+    friend ostream& operator<<(ostream& out, const Polynomial& p);
+    Polynomial Add(const Polynomial& poly);
+    Polynomial Mult(const Polynomial& poly);
+    float Eval(float x);
+};
 
-    Polynomial Add(const Polynomial& poly) const {
-        Polynomial result(*this);
-        for (int i = 0; i < poly.terms; i++)
-            result.addTerm(poly.termArray[i].coef, poly.termArray[i].exp);
-        return result;
+istream& operator>>(istream& in, Polynomial& p)
+{
+    int n;
+    cout << "請輸入項數: ";
+    in >> n;
+    p.terms = 0;
+    cout << "請輸入係數與指數\n";
+    for (int i = 0; i < n; i++)
+    {
+        float c;
+        int e;
+        in >> c >> e;
+        p.newTerm(c, e);
     }
-    Polynomial Mult(const Polynomial& poly) const {
-        Polynomial result;
-        for (int i = 0; i < terms; i++) {
-            for (int j = 0; j < poly.terms; j++) {
-                float coef = termArray[i].coef * poly.termArray[j].coef;
-                int exp = termArray[i].exp + poly.termArray[j].exp;
-                result.addTerm(coef, exp);
-            }
-        }
-        return result;
-    }
-    float Eval(float x) const {
-        float sum = 0;
-        for (int i = 0; i < terms; i++)
-            sum += termArray[i].coef * (float)pow(x, termArray[i].exp);
-        return sum;
-    }
+    return in;
+}
 
-    // 用成員函式讀取 Term 的私有資料。
-    ostream& print(ostream& out) const {
-        if (terms == 0) return out << 0;
-        for (int i = 0; i < terms; i++) {
-            float coef = termArray[i].coef;
-            int exp = termArray[i].exp;
-            if (i > 0) out << (coef < 0 ? " - " : " + ");
-            else if (coef < 0) out << '-';
-            float absCoef = (coef < 0) ? -coef : coef;
-            if (absCoef != 1 || exp == 0) out << absCoef;
-            if (exp > 0) {
-                out << 'x';
-                if (exp > 1) out << '^' << exp;
-            }
-        }
+ostream& operator<<(ostream& out, const Polynomial& p)
+{
+    if (p.terms == 0)
+    {
+        out << "0";
         return out;
     }
-    friend istream& operator>>(istream& in, Polynomial& p) {
-        int n;
-        if (!(in >> n)) return in;
-        if (n < 0) { in.setstate(ios::failbit); return in; }
-        Polynomial temp;
-        for (int i = 0; i < n; i++) {
-            float coef;
-            int exp;
-            if (!(in >> coef >> exp)) return in;
-            if (exp < 0) { in.setstate(ios::failbit); return in; }
-            temp.addTerm(coef, exp);
+    for (int i = 0; i < p.terms; i++)
+    {
+        float coef = p.termArray[i].coef;
+        int exp = p.termArray[i].exp;
+        if (i > 0 && coef >= 0)
+            out << " + ";
+        if (coef < 0)
+            out << " - ";
+        if (coef < 0)
+            coef = -coef;
+        out << coef;
+        if (exp > 0)
+        {
+            out << "x";
+            if (exp > 1)
+                out << "^" << exp;
         }
-        p = temp;
-        return in;
     }
-    friend ostream& operator<<(ostream& out, const Polynomial& p) {
-        return p.print(out);
-    }
-};
-#endif
+    return out;
+}
 
+Polynomial Polynomial::Add(const Polynomial& poly)
+{
+    Polynomial result;
+    for (int i = 0; i < terms; i++)
+    {
+        result.newTerm(termArray[i].coef, termArray[i].exp);
+    }
+    for (int i = 0; i < poly.terms; i++)
+    {
+        bool found = false;
+        for (int j = 0; j < result.terms; j++)
+        {
+            if (result.termArray[j].exp == poly.termArray[i].exp)
+            {
+                result.termArray[j].coef += poly.termArray[i].coef;
+                found = true;
+                break;
+            }
+        }
+        if (!found)
+        {
+            result.newTerm(poly.termArray[i].coef, poly.termArray[i].exp);
+        }
+    }
+    return result;
+}
+
+Polynomial Polynomial::Mult(const Polynomial& poly)
+{
+    Polynomial result;
+    for (int i = 0; i < terms; i++)
+    {
+        for (int j = 0; j < poly.terms; j++)
+        {
+            float newCoef = termArray[i].coef * poly.termArray[j].coef;
+            int newExp = termArray[i].exp + poly.termArray[j].exp;
+            bool found = false;
+            for (int k = 0; k < result.terms; k++)
+            {
+                if (result.termArray[k].exp == newExp)
+                {
+                    result.termArray[k].coef += newCoef;
+                    found = true;
+                    break;
+                }
+            }
+            if (!found)
+            {
+                result.newTerm(newCoef, newExp);
+            }
+        }
+    }
+    return result;
+}
+
+float Polynomial::Eval(float x)
+{
+    float sum = 0;
+    for (int i = 0; i < terms; i++)
+    {
+        sum += termArray[i].coef * pow(x, termArray[i].exp);
+    }
+    return sum;
+}
+#endif
 
 ```
 
@@ -180,46 +194,44 @@ public:
 ```cpp
 #include "header.h"
 
-int main() {
-    Polynomial A, B;
-    cout << "輸入 Polynomial A（項數，接著輸入係數 指數）：\n";
-    if (!(cin >> A)) { cout << "輸入錯誤\n"; return 1; }
-    cout << "輸入 Polynomial B（項數，接著輸入係數 指數）：\n";
-    if (!(cin >> B)) { cout << "輸入錯誤\n"; return 1; }
-
-    cout << "A(x) = " << A << endl;
+int main()
+{
+    Polynomial A;
+    Polynomial B;
+    cout << "輸入 Polynomial A\n";
+    cin >> A;
+    cout << "\n輸入 Polynomial B\n";
+    cin >> B;
+    cout << "\nA(x) = " << A << endl;
     cout << "B(x) = " << B << endl;
     Polynomial C = A.Add(B);
+    cout << "\nA + B = " << C << endl;
     Polynomial D = A.Mult(B);
-    cout << "A + B = " << C << endl;
     cout << "A * B = " << D << endl;
-
     float x;
-    cout << "輸入 x：\n";
-    if (!(cin >> x)) { cout << "輸入錯誤\n"; return 1; }
+    cout << "\n輸入 x：";
+    cin >> x;
     cout << "A(" << x << ") = " << A.Eval(x) << endl;
     cout << "B(" << x << ") = " << B.Eval(x) << endl;
     return 0;
 }
 
-
 ```
 
 ## 效能分析
 
-設兩個多項式分別有 n、m 項，r 是乘法過程中最多儲存的項數，r ≤ nm。
+設兩個多項式分別有 n、m 項，k 是輸入項數。
 
 | 函式 | 時間複雜度 | 空間複雜度 |
 | --- | --- | --- |
 | newTerm | 攤銷 O(1)，擴容時 O(k) | 擴容時 O(k) |
-| addTerm | O(k) | O(k)，包含擴容 |
 | Add | O(n + m(n+m)) | O(n+m) |
-| Mult | O(nm(r+1))，最壞 O((nm)^2) | O(r+1) |
+| Mult | 最壞 O((nm)^2) | O(nm+1) |
 | Eval | O(n)，將 pow 視為固定成本 | O(1) |
-| 輸入 | O(k²) | O(k) |
+| 輸入 | O(k) | O(k) |
 | 輸出 | O(n) | O(1) |
 
-k 是該操作處理的項數。加法和乘法都會搜尋同類項，因此不能只看外層迴圈計算時間。
+加法和乘法需要搜尋結果中的相同指數，所以乘法不能只看外層兩個迴圈就當作 O(nm)。
 
 ## 測試與驗證
 
@@ -231,11 +243,11 @@ k 是該操作處理的項數。加法和乘法都會搜尋同類項，因此不
 g++ -std=c++11 -Wall -Wextra -pedantic src/main.cpp -o polynomial
 ```
 
-本次實際使用 Visual Studio 2022 的 MSVC，編譯參數為 `/EHsc /O2 /W4 /std:c++14 /utf-8`。
+本次實際使用 MSVC，編譯參數為 `/EHsc /O2 /W4 /std:c++14 /utf-8`。pow 的結果轉成 float 時出現 C4244 警告，仍可完成編譯。
 
-### 測試一
+### 測試案例
 
-輸入兩個多項式，最後輸入 x：
+輸入 A = 3x^2 + 2x + 1，B = x - 1，最後輸入 x = 2：
 
 ```text
 3 3 2 2 1 1 0
@@ -243,49 +255,23 @@ g++ -std=c++11 -Wall -Wextra -pedantic src/main.cpp -o polynomial
 2
 ```
 
-計算結果：
+實際輸出：
 
 ```text
 A(x) = 3x^2 + 2x + 1
-B(x) = x - 1
-A + B = 3x^2 + 3x
-A * B = 3x^3 - x^2 - x - 1
+B(x) = 1x - 1
+A + B = 3x^2 + 3x + 0
+A * B = 3x^3 - 1x^2 - 1x - 1
 A(2) = 17
 B(2) = 1
 ```
 
-### 其他測試
-
-| 測試內容 | 預期結果 | 實際結果 |
-| --- | --- | --- |
-| 多項式乘以 0 | 0 | 0 |
-| 多項式加上 0 | 原多項式 | 相同 |
-| 相同指數的係數互相抵銷 | 移除該項 | 相同 |
-| 常數 7 代入 x=0 | 7 | 7 |
-| 0.5x^2 - 0.25 代入 x=2 | 1.75 | 1.75 |
-| 複製後修改原物件 | 複本不變 | 相同 |
-| 輸入負指數 | 顯示輸入錯誤 | 相同 |
-
-程式適用於一般有限係數，指數須為非負整數，且乘法的指數和不能超過 int 範圍。浮點數計算可能有誤差。
-
-### 效能量測
-
-使用 i7-12700KF 電腦，兩個多項式都輸入 1+x+…+x^(N-1)，代入 x=1。每組執行 5 次，量測完整程式執行時間。
-
-| 每個多項式項數 N | 平均時間（毫秒） |
-| --- | --- |
-| 10 | 8.613 |
-| 50 | 7.307 |
-| 100 | 7.000 |
-| 200 | 9.092 |
-
-時間包含程式啟動、輸入和輸出，所以小資料的結果容易受到其他因素影響，不能當作乘法本身的時間。
+此版本不會刪除抵銷後的零係數項，所以加法結果會保留最後的 + 0。輸出也會保留係數 1。
 
 ## 心得討論
 
-這題要注意相同指數的項要合併，係數加起來變成 0 的項也要刪除，否則輸出會多出沒有用的項。
+加法和乘法都要注意相同指數的項，找到後把係數加進去，找不到才新增一項。用迴圈搜尋比較容易理解，但是項數增加後會比較慢。
 
-另外，動態陣列不能只複製指標，所以補上複製建構子和指定運算子，讓每個物件有自己的陣列，避免重複釋放。
+這個版本沒有整理輸入中重複的指數，也沒有移除零係數項。輸入時應使用不同指數、非零係數，容量需大於 0，且數值不要超出型別範圍。
 
-目前用迴圈搜尋同類項比較容易理解，不過項數多時會比較慢，之後可以用教材的雙指標方法改進加法。
-
+目前沒有另外寫複製建構子和指定運算子，複製物件時可能共用同一個陣列。這次範例執行成功，但不能保證其他編譯設定下也沒有重複釋放的問題，後續可補上深層複製。
