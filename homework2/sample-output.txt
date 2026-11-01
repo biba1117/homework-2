@@ -1,9 +1,0 @@
-Enter A: term count, then coefficient exponent pairs
-Enter B: term count, then coefficient exponent pairs
-Enter x:
-A(x) = 3x^2 + 2x + 1
-B(x) = x - 1
-A + B = 3x^2 + 3x
-A * B = 3x^3 - x^2 - x - 1
-A(2) = 17
-B(2) = 1
