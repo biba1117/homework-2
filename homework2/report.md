@@ -20,254 +20,296 @@
 
 
 ```cpp
+
 #include <iostream>
 #include <cmath>
 using namespace std;
 
+// 儲存多項式的單一項
 class Term
 {
 public:
-	float coef;
-	int exp;
+    float coef; // 係數
+    int exp;    // 指數
 };
 
+// 多項式類別
 class Polynomial
 {
 private:
-	Term* termArray;
-	int capacity;
-	int terms;
+    Term* termArray; // 儲存多項式的動態陣列
+    int capacity;    // 陣列容量
+    int terms;       // 目前項數
 
-	void newTerm(float coef, int exp)
-	{
-		if (terms >= capacity)
-		{
-			capacity *= 2;
+    // 新增一項
+    void newTerm(float coef, int exp)
+    {
+        // 容量不足時擴充兩倍
+        if (terms >= capacity)
+        {
+            capacity *= 2;
 
-			Term* temp = new Term[capacity];
+            Term* temp = new Term[capacity];
 
-			for (int i = 0; i < terms; i++)
-			{
-				temp[i] = termArray[i];
-			}
+            // 複製舊資料
+            for (int i = 0; i < terms; i++)
+            {
+                temp[i] = termArray[i];
+            }
 
-			delete[] termArray;
-			termArray = temp;
-		}
+            delete[] termArray;
+            termArray = temp;
+        }
 
-		termArray[terms].coef = coef;
-		termArray[terms].exp = exp;
-		terms++;
-	}
+        // 儲存係數和指數
+        termArray[terms].coef = coef;
+        termArray[terms].exp = exp;
+        terms++;
+    }
 
 public:
-	Polynomial(int cap = 10)
-	{
-		capacity = cap;
-		terms = 0;
-		termArray = new Term[capacity];
-	}
+    // 建構子，預設容量10
+    Polynomial(int cap = 10)
+    {
+        capacity = cap;
+        terms = 0;
+        termArray = new Term[capacity];
+    }
 
-	~Polynomial()
-	{
-		delete[] termArray;
-	}
+    // 解構子，釋放記憶體
+    ~Polynomial()
+    {
+        delete[] termArray;
+    }
 
-	friend istream& operator>>(istream& in, Polynomial& p);
-	friend ostream& operator<<(ostream& out, const Polynomial& p);
+    // 輸入與輸出運算子
+    friend istream& operator>>(istream& in, Polynomial& p);
+    friend ostream& operator<<(ostream& out, const Polynomial& p);
 
-	Polynomial Add(const Polynomial& poly);
+    // 多項式加法
+    Polynomial Add(const Polynomial& poly);
 
-	Polynomial Mult(const Polynomial& poly);
+    // 多項式乘法
+    Polynomial Mult(const Polynomial& poly);
 
-	float Eval(float x);
+    // 計算多項式的值
+    float Eval(float x);
 };
 
+// 輸入多項式
 istream& operator>>(istream& in, Polynomial& p)
 {
-	int n;
+    int n;
 
-	cout << "請輸入項數: ";
-	in >> n;
+    cout << "請輸入項數: ";
+    in >> n;
 
-	p.terms = 0;
+    p.terms = 0;
 
-	cout << "請輸入係數與指數\n";
+    cout << "請輸入係數與指數\n";
 
-	for (int i = 0; i < n; i++)
-	{
-		float c;
-		int e;
+    // 逐項輸入係數與指數
+    for (int i = 0; i < n; i++)
+    {
+        float c;
+        int e;
 
-		in >> c >> e;
+        in >> c >> e;
 
-		p.newTerm(c, e);
-	}
+        p.newTerm(c, e);
+    }
 
-	return in;
+    return in;
 }
 
+// 輸出多項式
 ostream& operator<<(ostream& out, const Polynomial& p)
 {
-	if (p.terms == 0)
-	{
-		out << "0";
-		return out;
-	}
+    // 沒有項數時輸出0
+    if (p.terms == 0)
+    {
+        out << "0";
+        return out;
+    }
 
-	for (int i = 0; i < p.terms; i++)
-	{
-		float coef = p.termArray[i].coef;
-		int exp = p.termArray[i].exp;
+    for (int i = 0; i < p.terms; i++)
+    {
+        float coef = p.termArray[i].coef;
+        int exp = p.termArray[i].exp;
 
-		if (i > 0 && coef >= 0)
-			out << " + ";
+        // 正數加上加號
+        if (i > 0 && coef >= 0)
+            out << " + ";
 
-		if (coef < 0)
-			out << " - ";
+        // 負數加上減號
+        if (coef < 0)
+            out << " - ";
 
-		if (coef < 0)
-			coef = -coef;
+        if (coef < 0)
+            coef = -coef;
 
-		out << coef;
+        out << coef;
 
-		if (exp > 0)
-		{
-			out << "x";
+        // 指數大於0才輸出x
+        if (exp > 0)
+        {
+            out << "x";
 
-			if (exp > 1)
-				out << "^" << exp;
-		}
-	}
+            if (exp > 1)
+                out << "^" << exp;
+        }
+    }
 
-	return out;
+    return out;
 }
 
+// 多項式加法
 Polynomial Polynomial::Add(const Polynomial& poly)
 {
-	Polynomial result;
+    Polynomial result;
 
-	for (int i = 0; i < terms; i++)
-	{
-		result.newTerm(
-			termArray[i].coef,
-			termArray[i].exp
-		);
-	}
+    // 先複製第一個多項式
+    for (int i = 0; i < terms; i++)
+    {
+        result.newTerm(
+            termArray[i].coef,
+            termArray[i].exp
+        );
+    }
 
-	for (int i = 0; i < poly.terms; i++)
-	{
-		bool found = false;
+    // 加入第二個多項式
+    for (int i = 0; i < poly.terms; i++)
+    {
+        bool found = false;
 
-		for (int j = 0; j < result.terms; j++)
-		{
-			if (result.termArray[j].exp ==
-				poly.termArray[i].exp)
-			{
-				result.termArray[j].coef +=
-					poly.termArray[i].coef;
+        // 尋找相同指數的項
+        for (int j = 0; j < result.terms; j++)
+        {
+            if (result.termArray[j].exp ==
+                poly.termArray[i].exp)
+            {
+                // 相同指數就合併係數
+                result.termArray[j].coef +=
+                    poly.termArray[i].coef;
 
-				found = true;
-				break;
-			}
-		}
+                found = true;
+                break;
+            }
+        }
 
-		if (!found)
-		{
-			result.newTerm(
-				poly.termArray[i].coef,
-				poly.termArray[i].exp
-			);
-		}
-	}
+        // 沒有相同指數就新增
+        if (!found)
+        {
+            result.newTerm(
+                poly.termArray[i].coef,
+                poly.termArray[i].exp
+            );
+        }
+    }
 
-	return result;
+    return result;
 }
 
+// 多項式乘法
 Polynomial Polynomial::Mult(const Polynomial& poly)
 {
-	Polynomial result;
+    Polynomial result;
 
-	for (int i = 0; i < terms; i++)
-	{
-		for (int j = 0; j < poly.terms; j++)
-		{
-			float newCoef =
-				termArray[i].coef *
-				poly.termArray[j].coef;
+    // 每一項互相相乘
+    for (int i = 0; i < terms; i++)
+    {
+        for (int j = 0; j < poly.terms; j++)
+        {
+            // 係數相乘
+            float newCoef =
+                termArray[i].coef *
+                poly.termArray[j].coef;
 
-			int newExp =
-				termArray[i].exp +
-				poly.termArray[j].exp;
+            // 指數相加
+            int newExp =
+                termArray[i].exp +
+                poly.termArray[j].exp;
 
-			bool found = false;
+            bool found = false;
 
-			for (int k = 0; k < result.terms; k++)
-			{
-				if (result.termArray[k].exp == newExp)
-				{
-					result.termArray[k].coef += newCoef;
-					found = true;
-					break;
-				}
-			}
+            // 尋找相同指數
+            for (int k = 0; k < result.terms; k++)
+            {
+                if (result.termArray[k].exp == newExp)
+                {
+                    // 合併同類項
+                    result.termArray[k].coef += newCoef;
+                    found = true;
+                    break;
+                }
+            }
 
-			if (!found)
-			{
-				result.newTerm(newCoef, newExp);
-			}
-		}
-	}
+            // 沒有相同指數就新增
+            if (!found)
+            {
+                result.newTerm(newCoef, newExp);
+            }
+        }
+    }
 
-	return result;
+    return result;
 }
 
+// 代入x計算多項式的值
 float Polynomial::Eval(float x)
 {
-	float sum = 0;
+    float sum = 0;
 
-	for (int i = 0; i < terms; i++)
-	{
-		sum += termArray[i].coef *
-			pow(x, termArray[i].exp);
-	}
+    for (int i = 0; i < terms; i++)
+    {
+        // 係數乘上x的指數次方
+        sum += termArray[i].coef *
+            pow(x, termArray[i].exp);
+    }
 
-	return sum;
+    return sum;
 }
 
 int main()
 {
-	Polynomial A;
-	Polynomial B;
+    // 建立兩個多項式
+    Polynomial A;
+    Polynomial B;
 
-	cout << "輸入 Polynomial A\n";
-	cin >> A;
+    // 輸入多項式
+    cout << "輸入 Polynomial A\n";
+    cin >> A;
 
-	cout << "\n輸入 Polynomial B\n";
-	cin >> B;
+    cout << "\n輸入 Polynomial B\n";
+    cin >> B;
 
-	cout << "\nA(x) = " << A << endl;
-	cout << "B(x) = " << B << endl;
+    // 顯示多項式
+    cout << "\nA(x) = " << A << endl;
+    cout << "B(x) = " << B << endl;
 
-	Polynomial C = A.Add(B);
-	cout << "\nA + B = " << C << endl;
+    // 計算加法
+    Polynomial C = A.Add(B);
+    cout << "\nA + B = " << C << endl;
 
-	Polynomial D = A.Mult(B);
-	cout << "A * B = " << D << endl;
+    // 計算乘法
+    Polynomial D = A.Mult(B);
+    cout << "A * B = " << D << endl;
 
-	float x;
+    float x;
 
-	cout << "\n輸入 x：";
-	cin >> x;
+    // 輸入x並計算結果
+    cout << "\n輸入 x：";
+    cin >> x;
 
-	cout << "A(" << x << ") = "
-		<< A.Eval(x) << endl;
+    cout << "A(" << x << ") = "
+        << A.Eval(x) << endl;
 
-	cout << "B(" << x << ") = "
-		<< B.Eval(x) << endl;
+    cout << "B(" << x << ") = "
+        << B.Eval(x) << endl;
 
-	return 0;
+    return 0;
 }
+
 ```
 
 
